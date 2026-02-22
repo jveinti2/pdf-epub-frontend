@@ -52,7 +52,8 @@ const steps = ["Extrayendo texto", "Analizando estructura", "Generando EPUB", "V
         setCurrentStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
       }, 1500);
 
-      const response = await fetch("/api/convert", {
+      const apiUrl = import.meta.env.VITE_API_URL || "/api";
+      const response = await fetch(`${apiUrl}/convert`, {
         method: "POST",
         body: formData,
       });

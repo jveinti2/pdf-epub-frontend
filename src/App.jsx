@@ -17,6 +17,7 @@ const steps = ["Extrayendo texto", "Analizando estructura", "Generando EPUB", "V
   const [currentStep, setCurrentStep] = useState(0);
   const [epubUrl, setEpubUrl] = useState(null);
   const [error, setError] = useState(null);
+  const [contentType, setContentType] = useState("novel");
   const inputRef = useRef();
 
   const handleFile = (f) => {
@@ -44,6 +45,7 @@ const steps = ["Extrayendo texto", "Analizando estructura", "Generando EPUB", "V
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("content_type", contentType);
 
     try {
       setStatus(STATUS.PROCESSING);
@@ -61,8 +63,14 @@ const steps = ["Extrayendo texto", "Analizando estructura", "Generando EPUB", "V
       clearInterval(progressInterval);
 
       if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || "Error al convertir");
+        let errorMsg = "Error al convertir";
+        try {
+          const err = await response.json();
+          errorMsg = err.detail || errorMsg;
+        } catch {
+          errorMsg = `Error ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMsg);
       }
 
       const blob = await response.blob();
@@ -72,6 +80,7 @@ const steps = ["Extrayendo texto", "Analizando estructura", "Generando EPUB", "V
       setEpubUrl(url);
       setStatus(STATUS.DONE);
     } catch (err) {
+      console.error("Conversion error:", err);
       setError(err.message || "Error de conexion");
       setStatus(STATUS.ERROR);
     }
@@ -174,6 +183,92 @@ const steps = ["Extrayendo texto", "Analizando estructura", "Generando EPUB", "V
           {/* Error */}
           {error && (
             <p className="mt-3 text-red-400 text-xs text-center">{error}</p>
+          )}
+
+          {/* Content Type Selector */}
+          {(status === STATUS.IDLE || status === STATUS.ERROR) && file && (
+            <div className="mt-6 bg-stone-900 border border-stone-800 rounded-lg p-6">
+              <label className="block text-stone-400 text-xs uppercase tracking-widest mb-4">
+                Tipo de contenido
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-all ${
+                  contentType === "poetry"
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-stone-700 hover:border-stone-600"
+                }`}>
+                  <input
+                    type="radio"
+                    name="contentType"
+                    value="poetry"
+                    checked={contentType === "poetry"}
+                    onChange={(e) => setContentType(e.target.value)}
+                    className="w-4 h-4 accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-stone-200 text-sm font-medium">Poesia</div>
+                    <div className="text-stone-600 text-xs">Versos y estrofas</div>
+                  </div>
+                </label>
+
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-all ${
+                  contentType === "novel"
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-stone-700 hover:border-stone-600"
+                }`}>
+                  <input
+                    type="radio"
+                    name="contentType"
+                    value="novel"
+                    checked={contentType === "novel"}
+                    onChange={(e) => setContentType(e.target.value)}
+                    className="w-4 h-4 accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-stone-200 text-sm font-medium">Novela</div>
+                    <div className="text-stone-600 text-xs">Prosa narrativa</div>
+                  </div>
+                </label>
+
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-all ${
+                  contentType === "essay"
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-stone-700 hover:border-stone-600"
+                }`}>
+                  <input
+                    type="radio"
+                    name="contentType"
+                    value="essay"
+                    checked={contentType === "essay"}
+                    onChange={(e) => setContentType(e.target.value)}
+                    className="w-4 h-4 accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-stone-200 text-sm font-medium">Ensayo</div>
+                    <div className="text-stone-600 text-xs">No ficcion</div>
+                  </div>
+                </label>
+
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-all ${
+                  contentType === "technical"
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-stone-700 hover:border-stone-600"
+                }`}>
+                  <input
+                    type="radio"
+                    name="contentType"
+                    value="technical"
+                    checked={contentType === "technical"}
+                    onChange={(e) => setContentType(e.target.value)}
+                    className="w-4 h-4 accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-stone-200 text-sm font-medium">Tecnico</div>
+                    <div className="text-stone-600 text-xs">Academico/codigo</div>
+                  </div>
+                </label>
+              </div>
+            </div>
           )}
 
           {/* Processing */}
